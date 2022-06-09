@@ -25,12 +25,20 @@
         <th></th>
     </tr>
     <c:forEach var="mealTo" items="${mealsTo}">
+
+        <c:url var="updateButton" value="">
+            <c:param name="action" value="update"/>
+            <c:param name="dateTime" value='${mealTo.dateTime}'/>
+            <c:param name="description" value='${mealTo.description}'/>
+            <c:param name="calories" value='${mealTo.calories}'/>
+        </c:url>
+
         <tr class="${mealTo.excess ? 'exceeded' : 'normal'}">
             <td align="center">${mealTo.dateTime}</td>
             <td align="left">${mealTo.description}</td>
             <td align="left">${mealTo.calories}</td>
-            <td><a href="?action=edit&mealTo=<c:out value=""/>">Update</a></td>
-            <td><a href="delete">Delete</a></td>
+            <<td><a href='${updateButton}'>Update</a></td>
+            <td><a href="?action=delete">Delete</a></td>
         </tr>
     </c:forEach>
     </tbody>

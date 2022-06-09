@@ -10,9 +10,11 @@
     DateTime : <input
         type="date" name="dateTime"
         value="<fmt:formatDate pattern="MM/dd/yyyy" value="${meal.dateTime}" />" /> <br />
+    <br><br>
     Description : <input
         type="text" name="description"
         value="<c:out value="${meal.description}" />" /> <br />
+    <br><br>
     Calories : <input
         type="number" name="calories"
         value="<c:out value="${meal.calories}" />" /> <br />
