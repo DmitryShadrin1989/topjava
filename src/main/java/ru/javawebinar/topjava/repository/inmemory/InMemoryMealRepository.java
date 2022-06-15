@@ -7,6 +7,7 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 import ru.javawebinar.topjava.util.MealsUtil;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,52 +27,62 @@ public class InMemoryMealRepository implements MealRepository{
     public Meal save(Meal meal, int userId) {
         log.info("save {}", meal);
 
-        if (meal.isNew()) {
-            meal.setId(counter.incrementAndGet());
-            repository.put(meal.getId(), meal);
-            return meal;
+        synchronized (repository) {
+            meal.setUserId(userId);
+            if (meal.isNew()) {
+                meal.setId(counter.incrementAndGet());
+                repository.put(meal.getId(), meal);
+                return meal;
+            }
+            Meal currentMeal = repository.get(meal.getId());
+            return isNotUsersMeal(currentMeal, userId) ? null :
+                    repository.computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
         }
-
-        if (repository.get(meal.getId()) != null
-                && repository.get(meal.getId()).getUserId() != userId) {
-            return null;
-        }
-        return repository.computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
     }
 
     @Override
     public boolean delete(int id, int userId) {
         log.info("delete {}", id);
 
-        if (repository.get(id) != null
-                && repository.get(id).getUserId() != userId) {
-            return false;
+        synchronized (repository) {
+            Meal meal = repository.get(id);
+            return !isNotUsersMeal(meal, userId) && repository.remove(id) != null;
         }
-        return repository.remove(id) != null;
     }
 
     @Override
     public Meal get(int id, int userId) {
         log.info("get {}", id);
 
-        Meal meal = repository.get(id);
-        if (meal.getUserId() != userId) {
-            return null;
+        synchronized (repository) {
+            Meal meal = repository.get(id);
+            return isNotUsersMeal(meal, userId) ? null : meal;
         }
-        return repository.get(id);
     }
 
     @Override
-    public Collection<Meal> getAll(int userId) {
+    public List<Meal> getAll(int userId) {
         log.info("getAll");
 
-        List<Meal> mealList= repository.values().stream()
-                .filter(meal -> meal.getUserId()==userId)
-                .sorted(Comparator.comparing(Meal::getDate))
-                .collect(Collectors.toList());
-        Collections.reverse(mealList);
+        synchronized (repository) {
+            return repository.values().stream()
+                    .filter(meal -> meal.getUserId() == userId)
+                    .sorted(Comparator.comparing(Meal::getDate).reversed())
+                    .collect(Collectors.toList());
+            }
+    }
 
-        return mealList;
+    @Override
+    public List<Meal> getAllBetween(LocalDate startDate, LocalDate endDate, int userId) {
+        return repository.values().stream()
+                .filter(meal -> (meal.getUserId() == userId
+                        && (startDate.compareTo(meal.getDate())<=0 && endDate.compareTo(meal.getDate())>=0)))
+                .sorted(Comparator.comparing(Meal::getDate).reversed())
+                .collect(Collectors.toList());
+    }
+
+    private boolean isNotUsersMeal(Meal meal, int userId) {
+        return meal != null && meal.getUserId() != userId;
     }
 }
 

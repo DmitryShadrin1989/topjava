@@ -20,6 +20,14 @@ public class User extends AbstractNamedEntity {
 
     private int caloriesPerDay = DEFAULT_CALORIES_PER_DAY;
 
+    public static final List<User> users = Arrays.asList(
+            new User(null, "Dmitry", "dmitry@mail.com", "111", Role.USER),
+            new User(null, "Vasily", "vasily@mail.com", "222", Role.USER),
+            new User(null, "Ekaterina", "ekaterina@mail.com", "333", Role.USER),
+            new User(null, "Mariya", "mariya@mail.com", "111", Role.USER),
+            new User(null, "Alexandr", "alexandr@mail.com", "111", Role.USER)
+    );
+
     public User(Integer id, String name, String email, String password, Role... roles) {
         this(id, name, email, password, DEFAULT_CALORIES_PER_DAY, true, Arrays.asList((roles)));
     }
